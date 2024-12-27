@@ -193,3 +193,188 @@ ok  	example.com/hello	0.216s
 ```
 
 Jangan merasa gimana-gimana kalo test-nya `fail`. Tujuan test kan emang buat ngecek apakah program hasil outputnya udah sesuai dengan yang diinginkan. Jadi jangan kesel sama test dan biasainlah test program yang dibangun.
+
+
+## Refactor Our Test
+
+_Maksud?_
+
+Maksud `refactor our test` tu kek misahin hal-hal yang berulang jadi satu function. Contoh, coba liat file test kita baik-baik
+
+```
+package main
+
+import "testing"
+
+func TestGreeting(t *testing.T) {
+	t.Run("saying hello to other people", func(t *testing.T) {
+		got := Greeting("Yuta-kun")
+		want := "Konnichiwa Yuta-kun"
+
+		if got != want {
+			t.Errorf("got %q want %q", got, want)
+		}
+	})
+
+	t.Run("say 'Konnichiwa' when an empty string is supplied", func(t *testing.T) {
+		got := Greeting("")
+		want := "Konnichiwa"
+
+		if got != want {
+			t.Errorf("got %q want %q", got, want)
+		}
+	})
+}
+```
+
+Perhatiin kode ini
+```
+if got != want {
+    t.Errorf("got %q want %q", got, want)
+}
+```
+
+Kode di atas tuh muncul berulang kali cuy. 
+Bisa dijadiin satu function kan?
+
+```
+funct assertCorrectMessage(t testing.TB, got, want string) {
+    t.Helper()
+    if got != want {
+        t.Errorf("got %q want %q", got, want)
+    }
+}
+```
+
+Sehingga kode lengkap `hello_test.go` jadi kayak gini
+```
+package main
+
+import "testing"
+
+func TestGreeting(t *testing.T) {
+	t.Run("saying hello to other people", func(t *testing.T) {
+		got := Greeting("Yuta-kun")
+		want := "Konnichiwa Yuta-kun"
+
+		assertCorrectMessage(t, got, want)
+	})
+
+	t.Run("say 'Konnichiwa' when an empty string is supplied", func(t *testing.T) {
+		got := Greeting("")
+		want := "Konnichiwa"
+
+		assertCorrectMessage(t, got, want)
+	})
+}
+
+func assertCorrectMessage(t testing.TB, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+```
+
+## Discipline
+
+Saat ngebuat project, ada _cycle_ yang harus diikuti
+
+- Buat test
+- Run the test
+- Refactor
+
+
+## Tambah bahasa
+
+
+Jadi kita tambah greeting pake `spanish` dan `french`.
+Tiap nambah satu bahasa langsung dibuat `test`-nya.
+
+Tapi karena ini kita pake s`witch` kita langsung buat 2 bahasa sekaligus
+
+```
+package main
+
+import (
+	"fmt"
+)
+
+const (
+	spanish = "spanish"
+	french  = "french"
+
+	hello          = "Konnichiwa"
+	helloInSpanish = "Hola"
+	helloInFrench  = "Bonjour"
+)
+
+func Greeting(name string, language string) string {
+	if name == "" {
+		return hello
+	}
+
+	switch language {
+	case spanish:
+		return helloInSpanish + " " + name
+	case french:
+		return helloInFrench + " " + name
+	}
+
+	return hello + " " + name
+}
+
+func main() {
+	fmt.Println(Greeting("Yuta-kun", ""))
+	fmt.Println(Greeting("Yuta-kun", spanish))
+	fmt.Println(Greeting("Yuta-kun", french))
+}
+```
+
+Nah, terus buat `test`-nya
+
+```
+package main
+
+import "testing"
+
+func TestGreeting(t *testing.T) {
+	t.Run("greet user in japanese", func(t *testing.T) {
+		got := Greeting("Yuta-kun", "")
+		want := "Konnichiwa Yuta-kun"
+
+		assertCorrectMessage(t, got, want)
+	})
+
+	t.Run("greet user in spanish", func(t *testing.T) {
+		got := Greeting("Yuta-kun", "spanish")
+		want := "Hola Yuta-kun"
+
+		assertCorrectMessage(t, got, want)
+	})
+
+	t.Run("greet user in french", func(t *testing.T) {
+		got := Greeting("Yuta-kun", "french")
+		want := "Bonjour Yuta-kun"
+
+		assertCorrectMessage(t, got, want)
+	})
+
+	t.Run("say 'Konnichiwa' when an empty string is supplied", func(t *testing.T) {
+		got := Greeting("", "")
+		want := "Konnichiwa"
+
+		assertCorrectMessage(t, got, want)
+	})
+}
+
+func assertCorrectMessage(t testing.TB, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+```
+
+Pas di-test hasilnya sudah `ok`.
+
