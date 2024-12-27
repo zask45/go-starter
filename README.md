@@ -53,3 +53,55 @@ func main() {
 	fmt.Println(quote.Go())
 }
 ```
+
+## Test
+
+Coba test apakah benar `formatter (fmt)` akan mengembalikan `Konnichiwa`.
+
+Gimana caranya? Kita pake prinsip `Separation of Concern (SoC)`. 
+
+Jadi ya, pas kita ngeprint "Konnichiwa" kita tuh pasti input string kan. Nah proses input string ini tuh bagian dari `domain`, yaitu bagian yang berhubungan langsung dengan logika bisnis. Dimana-nya yang berhubungan dengan logika bisnis? Ya proses input data (string) itu sendiri.
+
+Sedangkan, pas kita print ke layar user itu masuknya ke `side effect`. Side effect ini bisa disebut sebagai efek samping yang terjadi di luar dari domain logika. Contohnya kayak proses `display data` ke layar user, `save data to database`, dan `send http request`.
+
+Nah di kasus ini, kita bakal misahin bagian `Greeting` jadi fungsi tersendiri supaya ada `separation of concern`-nya.
+
+```
+func Greeting() string {
+    return "Konnichiwa"
+}
+
+func main() {
+    fmt.Println(Greeting())
+}
+```
+
+Terus buat file test bernama `hello_test.go`
+
+```
+package main
+
+import "testing"
+
+func TestGreeting(t *testing.T) {
+	got := Greeting()
+	want := "Konnichiwa"
+
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+}
+```
+
+Lalu run test
+
+```
+go test
+```
+
+Nanti hasilnya kayak gini. Kolom kedua itu nama module-nya btw
+
+```
+PASS
+ok      example.com/hello       0
+```
