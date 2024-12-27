@@ -281,7 +281,8 @@ func assertCorrectMessage(t testing.TB, got, want string) {
 Saat ngebuat project, ada _cycle_ yang harus diikuti
 
 - Buat test
-- Run the test
+- Implementasi kode secara minimal
+- Run test
 - Refactor
 
 
@@ -289,49 +290,7 @@ Saat ngebuat project, ada _cycle_ yang harus diikuti
 
 
 Jadi kita tambah greeting pake `spanish` dan `french`.
-Tiap nambah satu bahasa langsung dibuat `test`-nya.
-
-Tapi karena ini kita pake s`witch` kita langsung buat 2 bahasa sekaligus
-
-```
-package main
-
-import (
-	"fmt"
-)
-
-const (
-	spanish = "spanish"
-	french  = "french"
-
-	hello          = "Konnichiwa"
-	helloInSpanish = "Hola"
-	helloInFrench  = "Bonjour"
-)
-
-func Greeting(name string, language string) string {
-	if name == "" {
-		return hello
-	}
-
-	switch language {
-	case spanish:
-		return helloInSpanish + " " + name
-	case french:
-		return helloInFrench + " " + name
-	}
-
-	return hello + " " + name
-}
-
-func main() {
-	fmt.Println(Greeting("Yuta-kun", ""))
-	fmt.Println(Greeting("Yuta-kun", spanish))
-	fmt.Println(Greeting("Yuta-kun", french))
-}
-```
-
-Nah, terus buat `test`-nya
+Ngikutin cycle project di atas, kita bakal coba buat test-nya dulu untuk kedua bahasa tersebut.
 
 ```
 package main
@@ -376,6 +335,47 @@ func assertCorrectMessage(t testing.TB, got, want string) {
 }
 ```
 
+Terus revisi kode di `hello.go` jadi kayak gini
+
+```
+package main
+
+import (
+	"fmt"
+)
+
+const (
+	spanish = "spanish"
+	french  = "french"
+
+	hello          = "Konnichiwa"
+	helloInSpanish = "Hola"
+	helloInFrench  = "Bonjour"
+)
+
+func Greeting(name string, language string) string {
+	if name == "" {
+		return hello
+	}
+
+	switch language {
+	case spanish:
+		return helloInSpanish + " " + name
+	case french:
+		return helloInFrench + " " + name
+	}
+
+	return hello + " " + name
+}
+
+func main() {
+	fmt.Println(Greeting("Yuta-kun", ""))
+	fmt.Println(Greeting("Yuta-kun", spanish))
+	fmt.Println(Greeting("Yuta-kun", french))
+}
+```
+
+
 Pas di-test hasilnya sudah `ok`.
 
 
@@ -416,3 +416,14 @@ func Greeting(name string, language string) string {
 ```
 
 Jadi lebih rapih dan _readable_ kan?
+
+
+## Wrapping up
+
+Nah kalo dilihat dari perjalanan yang udah dilalui keliatan kan ya kalo yang kita kembangin tuh `Test Driven Development`.
+Ini juga yang sebenernya disaranin sama dokumentasi go.
+
+Secara keseluruhan prosesnya itu:
+- Buat test
+- Implementasi kode secara minimal
+- Refactor
