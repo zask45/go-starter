@@ -4,10 +4,16 @@ import (
 	"fmt"
 )
 
-func Greeting() string {
-	return "Konnichiwa"
+const helloInJapanese = "Konnichiwa"
+
+func Greeting(name string) string {
+	if name == "" {
+		return helloInJapanese
+	}
+
+	return helloInJapanese + " " + name
 }
 
 func main() {
-	fmt.Println(Greeting())
+	fmt.Println(Greeting("Yuta-kun"))
 }
