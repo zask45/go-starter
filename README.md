@@ -378,3 +378,41 @@ func assertCorrectMessage(t testing.TB, got, want string) {
 
 Pas di-test hasilnya sudah `ok`.
 
+
+## Refactor Again
+
+Yang namanya ngoding pasti bakal banyak `refactor`. Jadi jangan bosen buat nge-refactor kode kamu.
+
+Kita bisa ngerapihin kodenya supaya proses `switch` pada greeting prefix-nya bisa jadi satu function bernama `greetingPrefix`
+
+```
+func greetingPrefix(language string) (prefix string) {
+	switch language {
+	case spanish:
+		prefix = helloInSpanish
+	case french:
+		prefix = helloInFrench
+	default:
+		prefix = hello
+	}
+
+	return
+}
+```
+
+Btw kita juga bisa ngasih nama pada `return value`. 
+Kayak contoh di atas, kita kasih nama return value-nya jadi `prefix`.
+
+Nah abis itu tinggal sesuain function `Greeting`-nya
+
+```
+func Greeting(name string, language string) string {
+	if name == "" {
+		return hello
+	}
+
+	return greetingPrefix(language) + " " + name
+}
+```
+
+Jadi lebih rapih dan _readable_ kan?
