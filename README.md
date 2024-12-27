@@ -105,3 +105,91 @@ Nanti hasilnya kayak gini. Kolom kedua itu nama module-nya btw
 PASS
 ok      example.com/hello       0
 ```
+
+## Test Fail Example
+
+Kita bakal buat 2 test. 
+```
+package main
+
+import "testing"
+
+func TestGreeting(t *testing.T) {
+	t.Run("saying hello to other people", func(t *testing.T) {
+		got := Greeting("Yuta-kun")
+		want := "Konnichiwa Yuta-kun"
+
+		if got != want {
+			t.Errorf("got %q want %q", got, want)
+		}
+	})
+
+	t.Run("say 'Konnichiwa' when an empty string is supplied", func(t *testing.T) {
+		got := Greeting("")
+		want := "Konnichiwa"
+
+		if got != want {
+			t.Errorf("got %q want %q", got, want)
+		}
+	})
+}
+```
+
+Untuk buat banyak test dalam 1 file, kita bisa pake extension function `Run` (gak tau namanya di Go apa, tapi di Kotlin nama fungsi kek gini tu extension function). Parameter-nya itu ada 2, yang pertama `String` untuk ngespesifikasiin apa yang ditest. Seddangkan parameter keduanya itu `anon function untuk test`.
+
+Nah test yang pertama itu bakal ngetest apakah bener program bakal return _"Konnichiwa Yuta-kun"_ pas kita panggil fungsi `Greeting("Yuta-kun")`. 
+
+Run test dengan cara tekan tombol `Run test` kayak yang ada di gambar ini
+![img](./img/{8825A210-D550-4F64-BA93-3B5D5D9CC10B}.png)
+
+
+Hasil test-nya
+
+```
+ok  	example.com/hello	0.193s
+```
+
+
+Test yang kedua, kita bakal cek apakah program bakal ngereturn _"Konnichiwa" _ pas kita panggil function `Greeting("")`. Hasil test-nya:
+
+```
+--- FAIL: TestGreeting (0.00s)
+    --- FAIL: TestGreeting/say_'Konnichiwa'_when_an_empty_string_is_supplied (0.00s)
+        c:\Users\Keysha\Documents\Go\hello_test.go:20: got "Konnichiwa " want "Konnichiwa"
+FAIL
+FAIL	example.com/hello	0.199s
+FAIL
+```
+
+Udah jelas ya, error-nya:
+==got "Konnichiwa " want "Konnichiwa"==
+
+Ini karena di func `Greeting` emang ditambah spasi sebelum `name`.
+
+```
+func Greeting(name string) string {
+	return helloInJapanese + " " + name
+}
+```
+
+Nah sekarang coba perbaiki fungsi tersebut jadi gini
+
+```
+func Greeting(name string) string {
+	if name == "" {
+		return helloInJapanese
+	}
+
+	return helloInJapanese + " " + name
+}
+```
+
+Udah deh, hasil test-nya `ok`
+
+```
+Running tool: C:\Program Files\Go\bin\go.exe test -timeout 30s -run ^TestGreeting$/^say_'Konnichiwa'_when_an_empty_string_is_supplied$ example.com/hello
+
+ok  	example.com/hello	0.216s
+```
+
+Jangan merasa gimana-gimana kalo test-nya `fail`. Tujuan test kan emang buat ngecek apakah program hasil outputnya udah sesuai dengan yang diinginkan. Jadi jangan kesel sama test dan biasainlah test program yang dibangun.
