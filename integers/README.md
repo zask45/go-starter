@@ -70,7 +70,7 @@ ok  	example.com/hello/integers	(cached)
 
 ## Refactor
 
-Gak ada yang bisa di-refactor so we skip this step.
+Gak ada yang bisa di-refactor, so we skip this step.
 
 
 ## Wrapping up
