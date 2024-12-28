@@ -230,3 +230,126 @@ PASS
 coverage: 100.0% of statements
 ok      example.com/hello/arrays0.464s
 ```
+
+
+# Sum two slices
+
+## Write test file
+
+```
+func TestSumAll(t *testing.T) {
+	got := SumAll([]int{1, 2}, []int{0, 9})
+	want := []int{3, 9}
+
+	if got != want {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+```
+
+## Run the test
+
+Hasil test
+
+```
+Go\arrays\sum_test.go:30:9: undefined: SumAll
+FAIL	example.com/hello/arrays [build failed]
+```
+
+`sumAll` belum didefinisikan.
+
+
+## Write minimal code
+
+func SumAll(numbersToSum...[]int) []int {
+	return nil
+}
+
+
+## Run test again
+
+Hasil test
+```
+invalid operation: got != want (slice can only be compared to nil)
+FAIL	example.com/hello/arrays [build failed]
+```
+
+Maksudnya, kita gak bisa ngebandingin `slice 1` dengan `slice lainnya`.
+
+Makanya, kita harus pake cara lain. 
+Iterasi elemen satu-satu terus dibandingin? Terlalu panjang!
+
+Makanya, kita pake `reflect.DeepEqual` aja.
+
+```
+func TestSumAll(t *testing.T) {
+	got := SumAll([]int{1, 2}, []int{0, 9})
+	want := []int{3, 9}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+```
+
+Hasilnya
+```
+got [] want [3 9]
+FAIL
+FAIL	example.com/hello/arrays	0.208s
+```
+
+Selanjutnya kita perbaiki `SumAll` supaya bisa pass the test.
+
+
+## Write enough code to make it pass
+
+```
+func SumAll(numbersToSum ...[]int) []int {
+	lengthOfNumbers := len(numbersToSum)
+	sums := make([]int, lengthOfNumbers)
+
+	for i, numbers := range numbersToSum {
+		sums[i] = Sum(numbers)
+	}
+
+	return sums
+}
+```
+
+Kurang ngerti kodenya? Gapapa! 
+Ini penjelasannya.
+
+`make` itu digunain buat ngebuat slice sebanyak jumlah slice yang ditaruh di parameter. Dalam kasus ini berarti ada dua slice, yaitu `[]int{1, 2}` dan `[]int{0, 9}`.
+
+Sedangkan untuk kode di bawah ini,
+```
+for i, numbers := range numbersToSum {
+    sums[i] = Sum(numbers)
+}
+```
+
+maksudnya adalah 
+> _Untuk tiap elemen `numbers` pada `numbersToSum` (dengan index i), kita akan memanggil fungsi Sum() untuk menjumlahkan tiap elemen numbers._
+
+Saat di-test hasilnya sudah `oke`.
+
+Tapi jujur aja, kode-nya kurang kebaca kan? Makanya kita perlu refactor!
+
+
+## Refactor
+
+```
+func SumAll(numbersToSum ...[]int) []int {
+	var sums []int
+
+	for _, numbers := range numbersToSum {
+		sums = append(sums, Sum(numbers))
+	}
+
+	return sums
+}
+```
+
+Maksudnya
+> _Untuk tiap `numbers` pada `numbersToSum`, append `sums` kemudian isi dengan hasil dari Sum(numbers)_
