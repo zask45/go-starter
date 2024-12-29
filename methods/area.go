@@ -1,7 +1,7 @@
 package area
 
 func Perimeter(width float64, length float64) float64 {
-	return 2*width + 2*length
+	return 2 * (width + length)
 }
 
 func Area(width float64, length float64) float64 {
