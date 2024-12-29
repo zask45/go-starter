@@ -345,3 +345,164 @@ Hasil test:
 ```
 ok  	example.com/hello/methods	0.401s
 ```
+
+## Refactor
+
+Kode `if got != want` di `TestArea` tu berulang-ulang dan bisa dijadiin satu function.
+Kita buat kayak gini
+
+```
+func TestArea(t *testing.T) {
+
+	checkSum := func(t testing.TB, shape Shape, want float64) {
+		t.Helper()
+		got := shape.Area()
+		if got != want {
+			t.Errorf("got %.2f want %.2f", got, want)
+		}
+	}
+
+	t.Run("rectangles", func(t *testing.T) {
+		rectangle := Rectangle{12.0, 6.0}
+		want := 72.0
+
+		checkSum(t, rectangle, want)
+	})
+
+	t.Run("circle", func(t *testing.T) {
+		circle := Circle{10}
+		want := 314.1592653589793
+
+		checkSum(t, circle, want)
+	})
+}
+```
+
+Karena shape-nya ada 2 jadi tentu aja cara ngitung luas-nya jadi ada dua juga. 
+Nah karena itu kita harus masukkin `shape` sebagai parameter.
+Abis itu, baru kita bisa panggil method yang ngitung luas dari shape tersebut buat di-test.
+
+Barulah kita test. Eh hasil test-nya malah kayak gini
+
+```
+# example.com/hello/methods [example.com/hello/methods.test]
+c:\Users\Keysha\Documents\Go\methods\shapes_test.go:17:39: undefined: Shape
+FAIL	example.com/hello/methods [build failed]
+FAIL
+```
+
+Nah kita disuruh ngedefine `Shape`. 
+Di sini lah kita bakal ngegunain `interface` buat define Shape.
+
+
+# Interface
+
+Cara define `interface`
+
+```
+type Shape interface {
+    Area() float64
+}
+```
+
+Konstruksi bentuknya mirip sama `struct`.
+
+Singkat banget gak kayak Java yang harus pake `implement`. Gak kayak interface di kotlin juga yang basically Java tapi implement-nya diganti titik dua (:).
+
+Masukkin kode-nya ke `shapes.go`. Terus jalanin test.
+
+```
+ok  	example.com/hello/methods	0.354s
+```
+
+Pass, good.
+
+
+## Kok bisa test-nya pass?
+
+Interface di `go` ini agak beda sama di Java atau bahasa pemrograman lain. 
+
+Coba liat kode-kode ini
+```
+type Shape interface {
+    Area() float64
+}
+```
+```
+checkSum := func(t testing.TB, shape Shape, want float64) {
+    ...
+    got := shape.Area()
+    ...
+}
+```
+
+Interface nih cuma ngecek kalo si `rectangle` punya method `Area` terus nge-return `float64`, ya udah, dia termasuk `Shape`! 
+
+Basically `Shape` is everything that have `Area` and return `float64`.
+
+
+## Decoupling
+
+Coba liat helper function `checkSum` ini
+```
+checkSum := func(t testing.TB, shape Shape, want float64) {
+    ...
+    got := shape.Area()
+    ...
+}
+```
+
+Fungsi ini gak perlu ribet ngurusin `Shape` ini bentuknya `rectangle` `triangle` ataupun `circle`. 
+
+Di sini kita ngebuat `checkSum` gak terlalu bergantung sama jenis shape-nya. Ini ngebuat kode ini jadi `loose coupled`. 
+
+_Maksud?_
+Maksundya, kalo ada perubahan atau penambahan shapes, kita gak perlu ubah terlalu banyak kode pada `checkSum`.
+
+Nah proses untuk ngebuat kode `checkSum` jadi `loose coupled` ini disebut sama `decoupling`. Alias, misahin 'gandengan erat' antara kode di entity satu ke entity lain.
+
+
+## Refactor lagi
+
+Sebenernya, kode di `TestArea` itu bisa di-refactor lagi jadi `Table Driven Test`.
+
+Nah, sekarang buat `Table Driven Test`-nya.
+<br>
+<br>
+<br>
+
+
+# Table Driven Test
+
+## Write the test
+
+```
+func TestArea(t *testing.T) {
+
+	areaTest := []struct {
+		shape Shape
+		want  float64
+	}{
+		{Rectangle{12, 6}, 72.0},        // this is `tt``
+		{Circle{10}, 314.1592653589793}, // this is also `tt`
+	}
+
+	for _, tt := range areaTest {
+		got := tt.shape.Area()
+		if got != tt.want {
+			t.Errorf("got %g want %g", got, tt.want)
+		}
+	}
+}
+```
+
+Btw `%g` itu floating point `%f` tapi bisa juga jadi scientific notation `%e` kalo angkanya terlalu besar.
+
+
+## Run the test
+
+Hasil test
+
+```
+ok  	example.com/hello/methods	0.447s
+```
