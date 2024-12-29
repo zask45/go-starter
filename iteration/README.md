@@ -89,24 +89,22 @@ func Repeat(character string) string {
 
 Btw notice kan ya pas kita masukkin nilai ke variabel kita pake simbol `:=` sama `=`. Bedanya apa?
 
-`:=` itu buat deklarasi variabel `tanpa tipe data`. Kita bisa langsung masukkin nilai jadi kayak gini `x := 0`. Dan ini cuma bisa dipake dalem blok `fungsi`. Nilainya juga gak bisa diubah kayak `val` di JS. Btw ini namanya **short variabel declaration**.
+`:=` itu buat deklarasi variabel `tanpa tipe data`. Kita bisa langsung masukkin nilai jadi kayak gini `x := 0`. Dan ini cuma bisa dipake dalem blok `fungsi`. Btw simbol ini namanya **short variabel declaration**.
 
-Sedangkan simbol `=` digunain untuk masukkin nilai dengan atau tanpa tipe data. Bisa digunain di luar blok fungsi. Nilainya bisa diubah kayak `var` di JS. 
+Sedangkan simbol `=` digunain untuk masukkin nilai dengan atau tanpa tipe data. Bisa digunain di luar blok fungsi. Lebih sering dipake untuk inisiasi nilai ke variabel yang udah ada.
+
 Contoh:
 ```
 var x int
 x = 10
-
-var message = "Hi"
 ```
 
 Beda sama `:=` yang penggunaannya lebih kek gini
 ```
 x := 10
-// langsung print karena nilainya gak bisa diubah
 ```
 
 Intinya ya, penggunaannya itu biasanya ke gini
 
 - `:=` untuk deklarasi sekaligus inisialisasi nilai
-- `=` inisialisasi nilai ke var yang udah ada
+- `=` inisialisasi nilai ke variabel yang udah ada, inisiasi nilai ke variabel di luar scope function
