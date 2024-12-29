@@ -353,3 +353,160 @@ func SumAll(numbersToSum ...[]int) []int {
 
 Maksudnya
 > _Untuk tiap `numbers` pada `numbersToSum`, append `sums` kemudian isi dengan hasil dari Sum(numbers)_
+
+
+# Sum Tails
+
+Sekarang, kita cuma akan menjumlahkan semua elemen slice kecuali elemen yang paling depan.
+
+
+## Write test
+
+```
+func TestSumAllTails(t *testing.T) {
+	t.Run("make the sums of sum slices", func(t *testing.T) {
+		got := SumAllTails([]int{1, 2}, []int{0, 9})
+		want := []int{2, 9}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v want %v", got, want)
+		}
+	})
+
+	t.Run("safely sum empty slices", func(t *testing.T) {
+		got := SumAllTails([]int{}, []int{3, 4, 5})
+		want := []int{0, 9}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v want %v", got, want)
+		}
+	})
+}
+```
+
+
+## Run test
+
+Hasil 
+
+```
+undefined: SumAllTails
+```
+
+## Write code minimally
+
+```
+func SumAllTails(numbersToSum ...[]int) []int {
+	return nil
+}
+```
+
+
+## Run the test again
+
+Hasil test
+
+```
+--- FAIL: TestSumAllTails (0.00s)
+    --- FAIL: TestSumAllTails/make_the_sums_of_sum_slices (0.00s)
+        c:\Users\Keysha\Documents\Go\arrays\sum_test.go:47: got [] want [2 9]
+    --- FAIL: TestSumAllTails/safely_sum_empty_slices (0.00s)
+        c:\Users\Keysha\Documents\Go\arrays\sum_test.go:56: got [] want [0 9]
+FAIL
+FAIL	example.com/hello/arrays	0.437s
+FAIL
+```
+
+
+## Write enough code to pass the test
+
+Intinya ya, kalo `slice`-nya empty hasil SumAllTails == 0. Kalo `slice`-nya ada isi, jumlahkan mulai dari index ke-1 sampai akhir (index pertama == 0).
+
+```
+func SumAllTails(numbersToSum ...[]int) []int {
+	var sums []int
+
+	for _, numbers := range numbersToSum {
+		if len(numbers) == 0 {
+			sums = append(sums, 0)
+		} else {
+			tail := numbers[1:]
+			sums = append(sums, Sum(tail))
+		}
+	}
+
+	return sums
+}
+```
+
+> Untuk tiap `numbers` pada range `numbersToSum` kita lakukan perulangan. Jika slice `numbers` kosong, maka hasil `sum == 0`. Jika tidak kosong, maka jumlahkan tail.
+
+
+Hasil test-nya `ok`.
+
+
+## Refactor
+
+Refactor `sum_test.go` jadi kayak gini
+
+```
+package arrays
+
+import (
+	"reflect"
+	"testing"
+)
+
+func TestSum(t *testing.T) {
+	numbers := []int{1, 2, 3}
+
+	got := Sum(numbers)
+	expected := 6
+
+	if got != expected {
+		t.Errorf("got %d expected %d given %v", got, expected, numbers)
+	}
+}
+
+func TestSumAll(t *testing.T) {
+	got := SumAll([]int{1, 2}, []int{0, 9})
+	want := []int{3, 9}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
+func TestSumAllTails(t *testing.T) {
+	checkSums := func(t testing.TB, got, want []int) {
+		t.Helper()
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v want %v", got, want)
+		}
+	}
+
+	t.Run("make the sums of sum slices", func(t *testing.T) {
+		got := SumAllTails([]int{1, 2}, []int{0, 9})
+		want := []int{2, 9}
+
+		checkSums(t, got, want)
+	})
+
+	t.Run("safely sum empty slices", func(t *testing.T) {
+		got := SumAllTails([]int{}, []int{3, 4, 5})
+		want := []int{0, 9}
+
+		checkSums(t, got, want)
+	})
+}
+```
+
+
+## Wrapping up
+
+Inti yang udah di pelajarin di modul ini
+
+- Arrays
+- Slices: kayak array tapi gak perlu fixed capacity
+- `len` untuk cari tahu length dari array atau slice
+- `reflect.DeepEqual` untuk ngebandingin slices
