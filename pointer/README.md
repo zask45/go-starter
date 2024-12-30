@@ -115,7 +115,7 @@ Ini karena pas kita panggil `func (w Wallet) Deposit(amount int)` di file `test`
 Jadi kalo kita mau ngubah nilai wallet one and for all, kita harus ubah nilai tersebut di alokasi memori yang lama (yang original) bukan malah ubah yg copyan-nya. 
 
 Makanya kita pake `pointer`.
-
+<br><br>
 
 # Pointer
 
@@ -526,9 +526,8 @@ func (w *Wallet) Withdraw(amount Bitcoin) error {
 ```
 
 Karena `ErrInsufficientFunds` jadi variabel tersendiri, kita bisa pake variabel ini juga untuk testing.
-
-```
-
+<br>
+<br>
 
 # Unchecked errors
 
@@ -574,6 +573,7 @@ FAIL	example.com/hello/pointer	0.388s
 
 Nah, karena memang kita gak expecting any error di test tersebut, kita buat fungsi baru yang namanya `assertNoError` untuk handle `no error`.
 
+
 ```
 t.Run("withdraw", func(t *testing.T) {
     wallet := Wallet{balance: Bitcoin(10)}
@@ -593,9 +593,10 @@ Coba run `errcheck .`
 
 Gak ada return apapun. 
 Berarti sudah oke!
+<br>
+<br>
 
-
-## Wrapping up
+# Wrapping up
 
 - `Pointer` untuk menunjuk memori address suatu variabel. Biasanya digunain untuk mengganti value di object yang ada di argumen.
 - `Errors` jangan hanya dicek, tapi harus dihandle secara graceful!
