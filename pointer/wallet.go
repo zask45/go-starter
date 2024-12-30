@@ -1,5 +1,7 @@
 package wallet
 
+type Bitcoin int
+
 type Wallet struct {
 	balance int
 }
