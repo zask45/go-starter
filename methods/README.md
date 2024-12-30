@@ -506,3 +506,93 @@ Hasil test
 ```
 ok  	example.com/hello/methods	0.447s
 ```
+
+## Add Triangle
+
+Sekarang tambahin bangun ruang triangle.
+
+## Write the test
+
+Tambah Triangle di `TestArea`
+
+```
+{Triangle{10, 5}, 25.0},
+```
+
+Lalu tambah `Triangle` struct di `Shapes.go`
+
+```
+type Triangle struct {
+	Base   float64
+	Height float64
+}
+```
+
+
+## Run test
+
+Hasil test
+
+```
+Go\methods\shapes_test.go:23:4: cannot use Triangle{…} (value of type Triangle) as Shape value in struct literal: Triangle does not implement Shape (missing method Area)
+FAIL	example.com/hello/methods [build failed]
+FAIL
+````
+
+Berarti perlu tambah method `Area`
+
+
+## Write minimal amout of code to test
+
+```
+func (t Triangle) Area() float64 {
+	return 0
+}
+```
+
+Hasil test
+
+```
+got 0 want 25
+FAIL
+FAIL	example.com/hello/methods	0.404s
+```
+
+Berarti parameter-nya sudah benar, tinggal perbaiki return-nya.
+
+
+## Write enough code to make it pass
+
+```
+func (t Triangle) Area() float64 {
+	return t.Base * t.Height / 2
+}
+```
+
+Run test.
+
+Hasilnya
+```
+ok  	example.com/hello/methods	0.370s
+```
+
+
+## Make sure test output is helpful
+
+Kita bisa buat error message-nya jadi kayak di bawah ini supaya keliatan `shapes` mana yang fail pas di-test.
+
+```
+t.Errorf("%#v got %g want %g", tt.shape, got, tt.want)
+```
+
+Ini bisa ngebantu kita identifikasi mana bagian yang eprlu diperbaiki.
+
+
+## Wrapping up
+
+Di modul ini kita belajar:
+
+- `Struct` untuk buat data types sendiri
+- `Methods` untuk tambah fungsi pada data types sehingga bisa implementasi interface
+- `Interface` untuk definisi fungsi yang bisa digunain oleh berbagai struct
+- `Table Driven Test` supaya test lebih mudah di-maintain
