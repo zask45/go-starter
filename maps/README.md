@@ -583,3 +583,240 @@ Running tool: C:\Program Files\Go\bin\go.exe test -timeout 30s -run ^TestUpdate$
 ok  	example.com/hello/maps	0.390s
 ```
 
+Good, udah pass test!
+
+Masalahnya, kalo kita panggil method `Update` terus masukkin `word` dan `definition` baru, `word` itu bakal ketambah di `dictionary`. Karena ini cuma ubah nilai dari `word` yang udah ada, maka harus ada pengecekan lanjutan kan? Makanya kita harus upgrade kodenya.
+
+
+## Write the test first
+
+```
+func TestUpdate(t *testing.T) {
+	t.Run("existing word", func(t *testing.T) {
+		word := "test"
+		definition := "take measures to check the quality, performance, or reliability of something"
+
+		dictionary := Dictionary{word: definition}
+		newDefinition := "measurement to check quality or reability of something"
+
+		err := dictionary.Update(word, newDefinition)
+
+		assertError(t, err, nil)
+		assertDefinition(t, dictionary, word, newDefinition)
+	})
+
+	t.Run("new word", func(t *testing.T) {
+		word := "test"
+		definition := "take measures to check the quality, performance, or reliability of something"
+
+		dictionary := Dictionary{}
+
+		err := dictionary.Update(word, definition)
+
+		assertError(t, err, ErrWordDoesNotExists)
+
+	})
+}
+```
+
+Hasil test
+```
+# example.com/hello/maps [example.com/hello/maps.test]
+Go\maps\dictionary_test.go:61:10: dictionary.Update(word, newDefinition) (no value) used as value
+
+Go\maps\dictionary_test.go:73:10: dictionary.Update(word, definition) (no value) used as value
+
+Go\maps\dictionary_test.go:75:23: undefined: ErrWordDoesNotExists
+```
+
+
+## Write minimal code to test
+
+```
+const (
+	...
+	ErrWordDoesNotExists = DictionaryErr("word does not exist")
+)
+```
+```
+func (d Dictionary) Update(word, newDefinition string) error {
+	d[word] = newDefinition
+	return nil
+}
+```
+
+Hasil test
+```
+Go\maps\dictionary_test.go:75: got error %!q(<nil>) want "word does not exist"
+FAIL
+FAIL	example.com/hello/maps	0.156s
+```
+
+
+## Write enough amount of code to pass test
+
+```
+func (d Dictionary) Update(word, newDefinition string) error {
+	_, err := d.Search(word)
+
+	switch err {
+	case ErrNotFound:
+		return ErrWordDoesNotExists
+	case nil:
+		d[word] = newDefinition
+	default:
+		return err
+	}
+
+	return nil
+}
+```
+
+Hasil test
+```
+TestUpdate$ example.com/hello/maps
+
+ok  	example.com/hello/maps	0.166s
+```
+
+Nah udah pass test!
+
+Sekarang, tambah fitur `Delete`.
+
+
+# Delete word
+
+## Write test first
+
+```
+func TestDelete(t *testing.T) {
+	word := "test"
+	definition := "take measures to check the quality, performance, or reliability of something"
+	dictionary := Dictionary{word: definition}
+
+	dictionary.Delete(word)
+
+	_, err := dictionary.Search(word)
+	assertError(t, err, ErrNotFound)
+}
+```
+
+Hasil test
+```
+Go\maps\dictionary_test.go:85:13: dictionary.Delete undefined (type Dictionary has no field or method Delete)
+FAIL	example.com/hello/maps [build failed]
+FAIL
+```
+
+Saatnya tulis kode untuk method `Delete`.
+
+
+## Write minimal code to test
+
+```
+func (d Dictionary) Delete(word string) {
+
+}
+```
+
+Hasil test
+```
+got error %!q(<nil>) want "could not find the word"
+FAIL
+FAIL	example.com/hello/maps	0.387s
+FAIL
+```
+
+Error message menunjukkan bahwa `error` yang didapat dari `Search` itu `nil`. Artinya, `word` masih belum dihapus dari `dictionary`. Memang ini yang diharapkan karena method `Delete` masih kosong. Tapi hasil test ini menandakan bahwa parameter di method `Delete` sudah benar sehingga kita hanya perlu mengisi method `Delete`.
+
+Sekarang fix `Delete` to pass the test!
+
+
+## Write enough code to pass test
+
+```
+func (d Dictionary) Delete(word string) {
+	delete(d, word)
+}
+```
+
+Hasil test
+```
+TestDelete$ example.com/hello/maps
+
+ok  	example.com/hello/maps	(cached)
+```
+
+Sudah pass test!
+
+
+## Refactor
+
+Gak banyak yang bisa di-refactor, tapi kita bisa tambah implementasi untuk handle delete word yang gak ada di dictionary.
+
+```
+func TestDelete(t *testing.T) {
+	t.Run("existing word", func(t *testing.T) {
+		word := "test"
+		definition := "take measures to check the quality, performance, or reliability of something"
+		dictionary := Dictionary{word: definition}
+
+		err := dictionary.Delete(word)
+		assertError(t, err, nil)
+
+		_, err = dictionary.Search(word)
+		assertError(t, err, ErrNotFound)
+	})
+
+	t.Run("non existing word", func(t *testing.T) {
+		word := "test"
+		dictionary := Dictionary{}
+
+		err := dictionary.Delete(word)
+		assertError(t, err, ErrWordDoesNotExists)
+	})
+}
+```
+
+Hasilnya, dapat error jika `dictionary.Delete(word) has no value`.
+
+Kita refactor juga method `Delete` agar bisa return `error`. Kita juga akan melakukan pengecekan dengan logika yang mirip dengan yang kita lakukan di method `Update`.
+```
+func (d Dictionary) Delete(word string) error {
+	_, err := d.Search(word)
+
+	switch err {
+	case nil:
+		delete(d, word)
+	case ErrNotFound:
+		return ErrWordDoesNotExists
+	default:
+		return err
+	}
+
+	return nil
+}
+```
+
+Basically kalo `error` yang direturn `Search` itu nil, maka kita hapus `word` dari dictionary. Kalo `Search` malah return `ErrNotFound`, method `Delete` bakal return `ErrDoesNotExists`.
+
+Hasil test
+```
+^TestDelete$ example.com/hello/maps
+
+ok  	example.com/hello/maps	(cached)
+```
+
+Nah, sudah pass test!
+
+
+# Wrapping up
+
+Yang kita pelajarin dari modul ini
+- Buat maps
+- Tambah item di maps
+- Update item di maps
+- Delete item di maps
+- Error bertipe `const`
+
+Yang kita lakuin di modul ini basically CRUD(Create, Read, Update, Delete). Tinggal tambah proses writing `dictionary` ke server maka sudah bisa jadi backend api.
