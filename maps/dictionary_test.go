@@ -68,7 +68,7 @@ func TestUpdate(t *testing.T) {
 		word := "test"
 		definition := "take measures to check the quality, performance, or reliability of something"
 
-		dictionary := Dictionary{word: definition}
+		dictionary := Dictionary{}
 
 		err := dictionary.Update(word, definition)
 
