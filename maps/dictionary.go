@@ -1,5 +1,5 @@
 package maps
 
-func Maps(dictionary map[string]string, word string) string {
+func Search(dictionary map[string]string, word string) string {
 	return ""
 }
