@@ -1,13 +1,17 @@
 package maps
 
-import "errors"
+const (
+	ErrNotFound   = DictionaryErr("could not find the word")
+	ErrWordExists = DictionaryErr("word already exist")
+)
+
+type DictionaryErr string
+
+func (e DictionaryErr) Error() string {
+	return string(e)
+}
 
 type Dictionary map[string]string
-
-var (
-	ErrNotFound   = errors.New("could not find the word")
-	ErrWordExists = errors.New("word already exist")
-)
 
 func (d Dictionary) Search(word string) (string, error) {
 	definition, ok := d[word]
