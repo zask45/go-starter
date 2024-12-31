@@ -337,3 +337,249 @@ Running tool: C:\Program Files\Go\bin\go.exe test -timeout 30s -run ^TestAdd$ ex
 
 ok  	example.com/hello/maps	(cached)
 ```
+
+
+## Pointers, copies, et al 
+
+Gak kayak `field` biasa dimana perubahan nilai harus diakses lewat pointer, `maps` gak butuh seperti itu.
+Ini karena pas kita passing `map` ke function tertentu, kita tu sebenernya passing `pointer` dari `map` itu sendiri. Jadi kita gak perlu ngedefinisiin pointer lagi untuk ngubah value dari map.
+
+By the way, kita sebaiknya juga gak nginisialiasiin nilai `nil` ke map. Ini karena nilai nil bisa ngebuat `runtime panic`.
+
+Kalau memang mau inisialiasi map kosong sebaiknya kayak gini
+
+```
+var dictionary = map[string]string{}
+
+// or
+
+var dictionary = make(map[string]string)
+```
+
+Bukan malah
+```
+var m map[string]string 	// BIG NO!
+```
+
+
+## Refactor
+
+Refactor `TestAdd` jadi seperti ini
+```
+func TestAdd(t *testing.T) {
+	dictionary := Dictionary{}
+	word := "test"
+	definition := "take measures to check the quality, performance, or reliability of something"
+
+	dictionary.Add(word, definition)
+
+	assertDefinition(t, dictionary, word, definition)
+}
+```
+```
+
+func assertDefinition(t testing.TB, dictionary Dictionary, word, definition string) {
+	t.Helper()
+
+	got, err := dictionary.Search(word)
+	if err != nil {
+		t.Fatal("should find added word")
+	}
+
+	assertStrings(t, got, definition)
+}
+```
+
+Hasil test
+```
+ok  	example.com/hello/maps	(cached)
+```
+
+
+Sekarang, kita buat test untuk kondisi dimana nilai yang ingin kita masukkan sudah ada.
+
+
+## Write test first
+
+```
+func TestAdd(t *testing.T) {
+	t.Run("new word", func(t *testing.T) {
+		dictionary := Dictionary{}
+		word := "test"
+		definition := "take measures to check the quality, performance, or reliability of something"
+
+		err := dictionary.Add(word, definition)
+
+		assertError(t, err, nil)
+		assertDefinition(t, dictionary, word, definition)
+	})
+
+	t.Run("existing word", func(t *testing.T) {
+		word := "test"
+		definition := "take measures to check the quality, performance, or reliability of something"
+
+		// definisikan dictionary dengan key "word" dan value "definition"
+		dictionary := Dictionary{word: definition}
+
+		// add lagi key "word" dan value "definition" ke dictionary
+		err := dictionary.Add(word, definition)
+
+		assertError(t, err, ErrWordExists)
+		assertDefinition(t, dictionary, word, definition)
+	})
+}
+```
+
+Hasil test
+```
+Go\maps\dictionary_test.go:32:10: dictionary.Add(word, definition) (no value) used as value
+
+Go\maps\dictionary_test.go:46:10: dictionary.Add(word, definition) (no value) used as value
+
+Go\maps\dictionary_test.go:48:23: undefined: ErrWordExists
+FAIL	example.com/hello/maps [build failed]
+```
+
+Jika kita baca error message di atas ada dua masalah disini.
+`dictionary.Add(word, definition) tidak ada return type`
+`undefined ErrWordExists`
+
+Selanjutnya, kita perbaiki masalah di atas.
+
+
+## Write minimal code to test
+
+```
+var (
+	ErrNotFound = errors.New("could not find the word")
+	ErrWordExists = errors.New("word already exist")
+)
+```
+```
+func (d Dictionary) Add(word, definition string) error {
+	d[word] = definition
+	return nil
+}
+```
+
+Hasil test
+```
+-- FAIL: TestAdd (0.00s)
+    --- FAIL: TestAdd/existing_word (0.00s)
+        c:\Users\Keysha\Documents\Go\maps\dictionary_test.go:48: got error %!q(<nil>) want "word already exist"
+FAIL
+FAIL	example.com/hello/maps	0.435s
+```
+
+
+## Write enough code to make it pass
+
+```
+func (d Dictionary) Add(word, definition string) error {
+	_, err := d.Search(word)
+
+	switch err {
+	case ErrNotFound:
+		d[word] = definition
+	case nil:
+		return ErrWordExists
+	default:
+		return err
+	}
+
+	return nil
+}
+```
+
+Jadi intinya kita panggil method `Search`. 
+Kalo `word` belum ada di dictionary, kan pasti Search return error `ErrNotFound`. Nah jika yg di-return `ErrNotFound` maka kita tambahin `word` ke `dictionary`.
+
+Kalo `word` udah ada di dictionary, pasti error yang di-return adalah `nil`. Kalo ini terjadi, kita return error `ErrWordExists`.
+
+
+Hasil test
+```
+Running tool: C:\Program Files\Go\bin\go.exe test -timeout 30s -run ^TestAdd$ example.com/hello/maps
+
+ok  	example.com/hello/maps	0.383s
+```
+
+
+## Refactor
+
+Buat `error` menjadi `const` dengan tipe `DictionaryErr` seperti di bawah ini.
+```
+const (
+	ErrNotFound   = DictionaryErr("could not find the word")
+	ErrWordExists = DictionaryErr("word already exist")
+)
+
+type DictionaryErr string
+
+func (e DictionaryErr) Error() string {
+	return string(e)
+}
+```
+
+Di `Go` tipe data custom bisa dijadiin `error` kalau mengimplementasikan interface `error`. Makanya itu, pastikan ada method `Error()` untuk implementasi interface `error`.
+
+
+Sekarang, kita tambah fitur untuk `Update` definisi dari word.
+
+
+# Update definition of word
+
+## Write test first
+
+```
+func TestUpdate(t *testing.T) {
+	word := "test"
+	definition := "take measures to check the quality, performance, or reliability of something"
+
+	dictionary := Dictionary{word: definition}
+
+	newDefinition := "measurement to check quality or reability of something"
+	dictionary.Update(word, newDefinition)
+
+	assertDefinition(t, dictionary, word, newDefinition)
+}
+```
+
+Hasil test
+```
+dictionary.Update undefined (type Dictionary has no field or method Update)
+FAIL	example.com/hello/maps [build failed]
+FAIL
+```
+
+
+## Write minimal code to test
+
+```
+func (d Dictionary) Update(word, newDefinition string) {
+}
+```
+
+Hasil test
+```
+got "take measures to check the quality, performance, or reliability of something" want "measurement to check quality or reability of something" given "test"
+```
+
+Berarti parameter-nya sudah benar. Tinggal perbaiki kode pada method `Update`.
+
+
+## Write enough code to pass the test
+
+```
+func (d Dictionary) Update(word, newDefinition string) {
+	d[word] = newDefinition
+}
+```
+
+Hasil test
+```
+Running tool: C:\Program Files\Go\bin\go.exe test -timeout 30s -run ^TestUpdate$ example.com/hello/maps
+
+ok  	example.com/hello/maps	0.390s
+```
+
