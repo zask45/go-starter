@@ -1,8 +1,9 @@
 package maps
 
 const (
-	ErrNotFound   = DictionaryErr("could not find the word")
-	ErrWordExists = DictionaryErr("word already exist")
+	ErrNotFound          = DictionaryErr("could not find the word")
+	ErrWordExists        = DictionaryErr("word already exist")
+	ErrWordDoesNotExists = DictionaryErr("word does not exist")
 )
 
 type DictionaryErr string
@@ -38,6 +39,7 @@ func (d Dictionary) Add(word, definition string) error {
 	return nil
 }
 
-func (d Dictionary) Update(word, newDefinition string) {
+func (d Dictionary) Update(word, newDefinition string) error {
 	d[word] = newDefinition
+	return nil
 }
