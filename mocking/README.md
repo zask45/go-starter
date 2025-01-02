@@ -257,3 +257,159 @@ Cara test-nya lihat di console apakah benar compiler nunggu satu detik sebelum p
 Hasilnya tidak bisa saya videokan tapi benar bahwa program nunggu 1 detik sebelum print line selanjutnya!
 
 
+# Implement Mocking
+
+Kalau kita run test pasti bakal kerasa kalo `test`-nya itu berjalan selama 3 detik. Ini karena pas melakukan test fungsi `Countdown` dipanggil dan fungsi ini kan butuh 3 detik untuk print seluruh string.
+
+Sekarang bayangin , setiap kali test kita bakal ngehabisin waktu 3 detik untuk nungguin `Countdown` print seluruh isi string. Gak produktif banget kan? 
+
+Makanya, kita bisa pake konsep `mocking`. Maksudnya, kita bisa ganti `time.Sleep` jadi fungsi lain yang gak bener-bener tidur.
+
+Caranya? Pake `dependency injection` untuk melakukan `Spy`. Spy ini teknik buat mantau berapa kali fungsi dipanggil atau mantau argumen apa yang dipanggil tiap pemanggilan.
+
+Bingung? 
+Coba perhatiin contoh ini!
+
+
+## Write the test first
+
+Untuk mock `time.Sleeper` kita buat dulu interface untuk handle Sleeper yang bisa di-inject ke `test`. 
+
+```
+type Sleeper interface {
+	Sleep()
+}
+```
+
+Tiap method yang implementasi `Sleep` akan dianggap sebagai bagian dari `Sleeper`.
+
+Sekarang, buat method yang implementasi fungsi `Sleep` sekaligus ngelakuin `spy` ke `Sleeper`.
+
+```
+type SpySleeper struct {
+	Calls int
+}
+
+func (s *SpySleeper) Sleep() {
+	s.Calls++
+}
+```
+
+Karena `spySleeper` ini fungsinya mata-matain berapa kali `Sleeper` dipanggil, maka increment variabel `Calls` tiap kali `spySleeper.Sleep` dipanggil.
+
+
+Sekarang inject `spySleeper.Sleep` di `Countdown` pada `mock_test.go`
+```
+func TestCountdown(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	spySleeper := &SpySleeper{}
+
+	Countdown(buffer, spySleeper)
+
+	got := buffer.String()
+	want := `3
+2
+1
+Go!`
+
+	if got != want {
+		t.Errorf("got %q want %q", got, want)
+	}
+
+	if spySleeper.Calls != 3 {
+		t.Errorf("not enough calls to sleeper, want 3 instead of %d", spySleeper.Calls)
+	}
+}
+```
+
+Coba run test dan liat hasilnya
+```
+too many arguments in call to Countdown
+	have (*bytes.Buffer, *SpySleeper)
+	want (io.Writer)
+FAIL	example.com/hello/mocking [build failed]
+FAIL
+```
+
+
+## Write minimal amount of code to test
+
+Sekarang coba perbaiki parameter pada `Countdown` supaya bisa inject `Sleeper`.
+
+```
+func Countdown(writer io.Writer, sleeper Sleeper) {
+	for i := countdownStart; i > 0; i-- {
+		fmt.Fprintln(writer, i)
+		time.Sleep(1 * time.Second)
+	}
+	fmt.Fprintf(writer, finalWord)
+}
+```
+
+Tapi kalo kita run `mock.go`, hasilnya
+```
+\mock.go:34:12: not enough arguments in call to Countdown
+        have (*os.File)
+        want (io.Writer, Sleeper)
+```
+
+Kalo diliat dari error messagenya, kita diminta perbaiki kode di bawah ini supaya bisa masukkin `Sleeper` sebagai parameter.
+```
+func main() {
+	Countdown(os.Stdout)
+}
+```
+
+Nah sekarang coba buat `real Sleeper` yang implementasi interface Sleeper di `Countdown`. Karena ini bener-bener untuk implementasi di sisi user bukan cuma untuk di-test, gunain `timeSleep` untuk nge-halt 1 second tiap method ini dipanggil.
+
+```
+type DefaultSleeper struct{}
+
+func (d DefaultSleeper) Sleep() {
+	time.Sleep(1 * time.Second)
+}
+```
+```
+func main() {
+	sleeper := &DefaultSleeper{}
+	Countdown(os.Stdout, sleeper)
+}
+```
+
+Hasil run `mock.go` sudah berjalan semestinya.
+
+Sekarang coba run `test`
+```
+Go\mocking\mock_test.go:25: not enough calls to sleeper, want 3 instead of 0
+FAIL
+FAIL	example.com/hello/mocking	3.381s
+FAIL
+```
+
+## Write enough code to make it pass
+
+Sekarang panggil `sleeper.Sleep()` di `Countdown`.
+```
+func Countdown(writer io.Writer, sleeper Sleeper) {
+	for i := countdownStart; i > 0; i-- {
+		fmt.Fprintln(writer, i)
+		sleeper.Sleep()
+	}
+	fmt.Fprintf(writer, finalWord)
+}
+```
+
+Hasil test
+```
+ok  	example.com/hello/mocking	(cached)
+```
+
+Btw test-nya gak selama 3 detik lagi karena kita inject `SpySleeper` sebagai `Sleeper` instead of `DefaultSleeper`.
+
+Bingung?
+
+Jadi intinya, pas `Countdown` dipanggil di file `mock.go`, dia bakal ngelakuin `sleep` selama 1 detik tiap `sleeper.Sleep` dipanggil karena yang di-inject itu `DefaultSleeper`.
+
+Sedangkan, pas kita panggil `Countdown` di test, kita cuma ngitung berapa kali `sleeper.Sleep` dipanggil karena yang diinject itu `SpySleeper`.
+
+Jadi dengan make interface yang sama yaitu `Sleeper`, kita bisa inject dua struct dengan perilaku berbeda ke dalem satu function. Jadi lebih multifungsi kan method-nya?
