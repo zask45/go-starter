@@ -737,9 +737,9 @@ Intinya mocking itu ngebuat `objek baru` untuk `niru objek` yang ingin diuji. Co
 
 Yang harus diperhatiin, baik `SpySleeper` dan `DefaultSleeper` harus menjadi bagian dari interface yang sama supaya keduanya bisa bergantian di-`inject` ke satu fungsi.
 
-Perhatiin dua kode ini untuk paham `mocking`
+Kalo masih belum paham, coba pahamin dua kode ini.
 
-Kode untuk testing
+Kode untuk `testing`
 ```
 func TestCountdown(t *testing.T) {
 	buffer := &bytes.Buffer{}
@@ -808,3 +808,7 @@ func main() {
 	Countdown(os.Stdout, sleeper)
 }
 ```
+
+Intinya kita inject `Sleeper` di `Countdown`. Di _mock.go_ kita inject `DefaultSleeper` sebagai `Sleeper`. Sedangkan di _testing_ kita inject `SpySleeper` sebagai `Sleeper`. 
+
+Dua objek ini sama-sama punya method `Sleep`. Makanya mereka berdua dianggap sebagai bagian dari interface `Sleeper`. Dan makanya itu juga mereka bisa di-pass ke `Countdown`. Alesannya ya gak lain dan gak bukan karena sama-sama punya method `Sleep`.
