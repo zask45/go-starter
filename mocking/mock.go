@@ -51,6 +51,10 @@ type ConfigurableSleeper struct {
 	sleep    func(time.Duration)
 }
 
+func (c *ConfigurableSleeper) Sleep() {
+
+}
+
 // SpyTime
 
 type SpyTime struct {
