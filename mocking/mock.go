@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// Sleeper
+
 type Sleeper interface {
 	Sleep()
 }
@@ -19,11 +21,22 @@ func (s *SpySleeper) Sleep() {
 	s.Calls++
 }
 
+// Default Sleeper
+
 type DefaultSleeper struct{}
 
 func (d DefaultSleeper) Sleep() {
 	time.Sleep(1 * time.Second)
 }
+
+// Configurable Sleeper
+
+type ConfigurableSleeper struct {
+	duration time.Duration
+	sleep    func(time.Duration)
+}
+
+// SpyCountdownOperations
 
 type SpyCountdownOperations struct {
 	Calls []string
@@ -37,6 +50,8 @@ func (s *SpyCountdownOperations) Write(p []byte) (n int, err error) {
 	s.Calls = append(s.Calls, write)
 	return
 }
+
+// const
 
 const write = "write"
 const sleep = "sleep"
