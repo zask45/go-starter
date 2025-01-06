@@ -294,3 +294,12 @@ Di modul ini kita belajar tentang
 - `concurrency` yang basically ngebuat kita bisa ngelakuin beberapa proses dalam 1 waktu.
 - `goroutine` yang bisa ngebuat kita lakuin concurrency di _Go_.
 - `channel` untuk nampung hasil dari proses `goroutine`.
+
+
+## Make it work, make it right, make it fast
+
+Ada quote dari `Kent Beck` yang sering dipake di `agile development`
+
+> Make it work, make it right, make it fast
+
+Kalo dipikir-pikir yang kita lakuin di modul ini kan ngebuat proses lebih cepet juga. Buktinya hasil benchmark pas kita nerapin `goroutine` bisa hampir 3x lebih cepet dari sebelumnya.
