@@ -1,4 +1,4 @@
-package race
+package racer
 
 import (
 	"net/http"
