@@ -31,7 +31,7 @@ Hasil test
 ## Write minimal amout of code to test
 
 ```
-package race
+package racer
 
 func Racer(a, b string) string {
 	return ""
@@ -49,7 +49,7 @@ FAIL
 ## Write enough code to pass the test
 
 ```
-package race
+package racer
 
 import (
 	"net/http"
@@ -98,7 +98,7 @@ Karena itu, kita bisa buat `mock http server` untuk testing. Balik lagi, ini sup
 
 Makanya, coba ganti `test` jadi kek gini
 ```
-package race
+package racer
 
 import (
 	"net/http"
@@ -191,7 +191,7 @@ ok  	example.com/hello/select	(cached)
 
 Setelah itu, coba refactor `test` supaya kita bisa langusng panggil function tiap ingin membuat `mock server`
 ```
-package race
+package racer
 
 import (
 	"net/http"
@@ -309,4 +309,53 @@ func makeDelayedServer(delayTime time.Duration) *httptest.Server {
 		w.WriteHeader(http.StatusOK)
 	}))
 }
+```
+
+# Synchronising process
+
+Ngapain kita ngecek website mana yang paling cepat kalo kita bisa langsung return website tercepat?
+
+Nah inilah gunanya `Select`.
+
+Basically, kita jalanin kedua website itu di waktu yang bersamaan. Terus kita return yang paling cepet. 
+
+```
+package racer
+
+import (
+	"net/http"
+)
+
+func Racer(a, b string) (winner string) {
+	select {
+	case <-ping(a):
+		return a
+	case <-ping(b):
+		return b
+	}
+}
+
+func ping(url string) chan struct{} {
+	ch := make(chan struct{})
+	go func() {
+		http.Get(url)
+		close(ch)
+	}()
+	return ch
+}
+```
+
+Keliatan kan ya dari kodenya?
+
+Mekanismenya cukup simple. Kita buat function `ping` untuk `GET` url secara concurrent.
+
+Di `ping` jangan lupa buat `channel` supaya gak terjadi `race condition`. Kita pake `struct kosong` di channel karena kita gak butuh return. Kita cuma perlu untuk request `GET` secara concurrent.
+
+Nah `select` ini fungsinya apa?
+
+`select` ini berguna buat liat `channel` mana yang pertama dibuat. Kalo `ping(a)` ngebuat channel duluan maka return-nya bakal `a`. Sebaliknya kalo `ping(b)` buat `channel` duluan, maka return-nya bakal `b`.
+
+Hasil test
+```
+ok  	example.com/hello/select	0.709s
 ```
