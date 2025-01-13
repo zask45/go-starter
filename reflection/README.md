@@ -726,6 +726,7 @@ func walk(x interface{}, fn func(input string)) {
 		}
 	}
 }
+```
 
 ```
 Running tool: C:\Program Files\Go\bin\go.exe test -timeout 30s -run ^TestWalk$ example.com/hello/reflection
