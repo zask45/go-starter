@@ -22,8 +22,8 @@ func TestWalk(t *testing.T) {
 		ExpectedCalls []string
 	}{
 		{
-			"nested",
-			Person{
+			"pointers to things",
+			&Person{
 				"Chris",
 				Profile{33, "London"},
 			},
