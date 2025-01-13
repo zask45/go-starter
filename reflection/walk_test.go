@@ -17,7 +17,7 @@ func TestWalk(t *testing.T) {
 				Name string
 				Age  int
 			}{"Chris", 33},
-			[]string{"Chris", "London"},
+			[]string{"Chris"},
 		},
 	}
 
